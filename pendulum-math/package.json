@@ -1,0 +1,12 @@
+{
+  "name": "pendulum-math",
+  "version": "1.0.0",
+  "main": "src/ui/index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "1.14.2"
+  },
+  "scripts": {
+    "build-equations": "./build-equations.sh"
+  }
+}
