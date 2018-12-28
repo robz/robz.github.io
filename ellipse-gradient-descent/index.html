@@ -1,0 +1,35 @@
+<html>
+  <body>
+    <h1 style="text-align: center">Optimizing an ellipse</h1>
+    <div style="width: 500px; margin: auto">
+      <p>Click and drag on the plots below to draw a curve. A gradient descent optimizer will then attempt to find an ellipse that best fits the curve. The plot that incorporates phase usually fits the curve better.</p>
+      <h2>Details</h2>
+      <p>Gradient descent works by attempting to minimize the "error" between the hand-drawn curve and the ellipse, which is computed by summing over the euclidean distances between points on the ellipse and each corresponding point on the hand-drawn curve:</p>
+      <code>
+        sum(i = 0..N, euclid(ellipse(2 * pi * i / N), handdrawn(i)))
+      </code>
+      <p>The two plots use two different models of an ellipse. The first is modeled with four configurable parameters a, b, x0, and y0:</p>
+      <code>(x0 + a * cos(t), y0 + b * sin(t))</code>
+      <p>This model works ok, but the point where t=0 is always at the 3'oclock position, as shown by the small circle. That prevents the error sum above from ever converging to zero  if you draw a loop that doesn't start from the 3 o'clock position.</p>
+      <p>For example, if you draw a loop starting somewhere on the x axis, and then circle around the origin, then this model would could fit the drawn curve pretty well. But if you draw a loop starting somewhere on the y-axis instead, then the model would be unable to fit it very well. This is because at t=0, the model always has y=y0.</p>
+      <p>To address this issue, the second model adds a fifth "phase" parameter:</p>
+      <code>(x0 + a * cos(t + phase), y0 + b * sin(t + phase))</code>
+      <p>The phase parameter effectively allows the ellipse to rotate. That way, it can fit any hand-drawn ellipse curve regardlesss of where the drawing started. The small circle is the point on the ellipse where t=0, and is usually close to the first point on the hand-drawn ellipse.</p>
+    </div>
+    <div style="display: flex; justify-content: center">
+      <div style="margin-left: 10px; display: flex; flex-direction: column">
+        <div>without phase</div>
+        <canvas id="canvas1" width=700 height=700 style="border: 1px solid black"></canvas>
+        <textarea id="canvas1data" style="width: 700px;">data</textarea>
+      </div>
+      <div style="display: flex; flex-direction: column">
+        <div>with phase</div>
+        <canvas id="canvas0" width=700 height=700 style="border: 1px solid black"></canvas>
+        <textarea id="canvas0data" style="width: 700px;">data</textarea>
+      </div>
+    </div>
+    <div style="width: 500px; margin: auto">
+    </div>
+    <script src="dist/bundle.js"></script>
+  </body>
+</html>
