@@ -1,14 +1,21 @@
 <html>
-  <head>
-    <style>
-#root {
-  height: 420px;
-}
-    </style>
-  </head>
   <body>
-    <div id="root">
-      <canvas id="canvas" />
+    <div style="display: flex; flex-direction: column; align-items: center">
+      <h1>Double pendulum</h1>
+      <div style="width: 700px">
+        <p>
+        Below is a realtime simulation of a <a href="https://en.wikipedia.org/wiki/Double_pendulum">double pendulum</a> with point masses and no friction. I derived the differential equations of the double pendulum from scratch with sympy. The simulation uses the <a href="https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods">Runge–Kutta method</a> to integrate the differential equations at each time step.
+        </p>
+        <p>
+        The code is here: <a href="https://github.com/robz/pendulum_math">https://github.com/robz/pendulum_math</a>
+        </p>
+        <p>
+        My goal with this project was to use the double pendulum as a case study for understanding how to simulate arbitrary physical systems, eventually to play around with different control algorithms. I was inspired by the acrobot, a robot problem that I learned about in <a href="https://www.edx.org/course/underactuated-robotics-mitx-6-832x-0">MIT's Underactuated Robotics course</a>.
+        </p>
+      </div>
+      <div id="root">
+      <canvas id="canvas" width=700 height=700 style="border: 1px solid black"></canvas>
+      </div>
     </div>
     <script src="src/ui/calcThetaDotDots.js"></script>
     <script src="src/ui/index.js"></script>
