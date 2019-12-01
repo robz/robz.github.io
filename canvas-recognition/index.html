@@ -1,0 +1,115 @@
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      canvas {
+        border: 1px black solid;
+      }
+      table {
+        font-size: 30px;
+      }
+      td {
+        border: 1px black solid;
+        width: 80px;
+      }
+      h3 {
+        text-align: center;
+      }
+      button {
+        font-size: 26px;
+        width: 80px;
+        text-align: left;
+      }
+      #canvas_container {
+        display: flex;
+      }
+      #description {
+        width: 600px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="description">
+      <h1>
+        Recognizing handwritten digits in realtime
+      </h1>
+      <p>
+        I trained a simple model to recognize handwritten digits using
+        TensorFlow's
+        <a href="https://www.tensorflow.org/tutorials/keras/classification"
+          >Python API</a
+        >
+        and the mnist data set. I then used TensorFlow's
+        <a href="https://www.tensorflow.org/js/tutorials">Javascript API</a> to
+        run the model in the browser.
+      </p>
+      <p>
+        To test it, you can draw a digit on the canvas below and see the model's
+        realtime predictions on the right. I originally planned to provide a way
+        to retrain the model on the examples where it returns an incorrect
+        result (which is why each digit is a button), but I haven't found a good
+        way to do that yet.
+      </p>
+      <p>
+        See the architecture of the model <a href="#" id="model_link">here</a>,
+        and the full code for this project is <a href="https://github.com/robz/canvas-recognition">here</a>.
+      </p>
+    </div>
+    <div id="canvas_container">
+      <canvas id="canvas" height="500" width="500"></canvas>
+      <div>
+        <h3>Prediction:</h3>
+        <div id="table">
+          <table>
+            <tr>
+              <td><button id="button0">0</button></td>
+              <td id="prediction0">0</td>
+            </tr>
+            <tr>
+              <td><button id="button1">1</button></td>
+              <td id="prediction1">0</td>
+            </tr>
+            <tr>
+              <td><button id="button2">2</button></td>
+              <td id="prediction2">0</td>
+            </tr>
+            <tr>
+              <td><button id="button3">3</button></td>
+              <td id="prediction3">0</td>
+            </tr>
+            <tr>
+              <td><button id="button4">4</button></td>
+              <td id="prediction4">0</td>
+            </tr>
+            <tr>
+              <td><button id="button5">5</button></td>
+              <td id="prediction5">0</td>
+            </tr>
+            <tr>
+              <td><button id="button6">6</button></td>
+              <td id="prediction6">0</td>
+            </tr>
+            <tr>
+              <td><button id="button7">7</button></td>
+              <td id="prediction7">0</td>
+            </tr>
+            <tr>
+              <td><button id="button8">8</button></td>
+              <td id="prediction8">0</td>
+            </tr>
+            <tr>
+              <td><button id="button9">9</button></td>
+              <td id="prediction9">0</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script src="./dist/main.js"></script>
+  </body>
+</html>
