@@ -50,14 +50,19 @@
       </p>
       <p>
         To test it, you can draw a digit on the canvas below and see the model's
-        realtime predictions on the right. I originally planned to provide a way
-        to retrain the model on the examples where it returns an incorrect
-        result (which is why each digit is a button), but I haven't found a good
-        way to do that yet.
+        realtime predictions on the right. If you see a bad prediction, you can
+        record it by clicking the number that the model should have predicted.
+        The data from the image, the prediction, and the button you pressed will
+        be saved via
+        <a href="https://www.pubnub.com/features/pub-sub-messaging/"
+          >PubHub's messaging API</a
+        >. I can then retrain the model using the recorded mistaken predictions
+        in order to improve it.
       </p>
       <p>
         See the architecture of the model <a href="#" id="model_link">here</a>,
-        and the full code for this project is <a href="https://github.com/robz/canvas-recognition">here</a>.
+        and the full code for this project is
+        <a href="https://github.com/robz/canvas-recognition">here</a>.
       </p>
     </div>
     <div id="canvas_container">
@@ -67,43 +72,43 @@
         <div id="table">
           <table>
             <tr>
-              <td><button id="button0">0</button></td>
+              <td><button id="button0" disabled>0</button></td>
               <td id="prediction0">0</td>
             </tr>
             <tr>
-              <td><button id="button1">1</button></td>
+              <td><button id="button1" disabled>1</button></td>
               <td id="prediction1">0</td>
             </tr>
             <tr>
-              <td><button id="button2">2</button></td>
+              <td><button id="button2" disabled>2</button></td>
               <td id="prediction2">0</td>
             </tr>
             <tr>
-              <td><button id="button3">3</button></td>
+              <td><button id="button3" disabled>3</button></td>
               <td id="prediction3">0</td>
             </tr>
             <tr>
-              <td><button id="button4">4</button></td>
+              <td><button id="button4" disabled>4</button></td>
               <td id="prediction4">0</td>
             </tr>
             <tr>
-              <td><button id="button5">5</button></td>
+              <td><button id="button5" disabled>5</button></td>
               <td id="prediction5">0</td>
             </tr>
             <tr>
-              <td><button id="button6">6</button></td>
+              <td><button id="button6" disabled>6</button></td>
               <td id="prediction6">0</td>
             </tr>
             <tr>
-              <td><button id="button7">7</button></td>
+              <td><button id="button7" disabled>7</button></td>
               <td id="prediction7">0</td>
             </tr>
             <tr>
-              <td><button id="button8">8</button></td>
+              <td><button id="button8" disabled>8</button></td>
               <td id="prediction8">0</td>
             </tr>
             <tr>
-              <td><button id="button9">9</button></td>
+              <td><button id="button9" disabled>9</button></td>
               <td id="prediction9">0</td>
             </tr>
           </table>
