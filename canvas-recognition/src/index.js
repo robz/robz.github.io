@@ -89,7 +89,10 @@ function writePrediction(prediction) {
 }
 
 async function main() {
-  const model = await tf.loadLayersModel('/model/model.json', false);
+  const model = await tf.loadLayersModel(
+    window.location.href + '/model/model.json',
+    false,
+  );
   writePrediction(await predict(model, arr));
 
   let id;
