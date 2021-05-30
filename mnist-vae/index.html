@@ -1,0 +1,96 @@
+<html>
+  <body>
+    <div style="display: flex; justify-content: center;">
+      <section style="width: 700px;">
+        <h1 style="text-align: center;">Interactive Variational Autoencoder</h1>
+        <p>
+          Move your mouse over the graph to generate a digit.
+        </p>
+        <p>
+          How it works: I trained a
+          <a
+            href="https://en.wikipedia.org/wiki/Autoencoder#Variational_autoencoder_(VAE)"
+            >variational autoencoder</a
+          >
+          (VAE) on the
+          <a href="https://pytorch.org/vision/stable/datasets.html#mnist"
+            >MNIST dataset</a
+          >
+          using a 2-dimensional latent space. The graph below shows each image
+          in the training set encoded into its mean in the latent space, shown
+          as an xy point, and colored with its respective label. I
+          <a
+            href="https://colab.research.google.com/drive/1wMTCIPeyim3r6DHPC2jDs2pbur7-WHOO?usp=sharing"
+            >trained the model in Google Colab</a
+          >
+          with <a href="https://pytorch.org/">pytorch</a>, and exported the
+          decoder to
+          <a href="https://pytorch.org/docs/stable/onnx.html">ONNX format</a>,
+          then used <a href="https://github.com/Microsoft/onnxjs">ONNX.js</a> to
+          load the model and run it in the browser.
+        </p>
+        <p>
+          The point that you move the mouse over is interpreted as a sample from
+          the latent space. It is passed into the decoder to get an image, which
+          is then drawn on a canvas to the right.
+        </p>
+      </section>
+    </div>
+    <div style="display: flex; justify-content: center; margin-top: 20px;">
+      <div>
+        <img
+          style="margin-right: 80px;"
+          id="latent_space"
+          src="./latent_space.png"
+        />
+        <canvas id="canvas" width="260" height="260"></canvas>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/onnxjs/dist/onnx.min.js"></script>
+    <script>
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const {width, height} = canvas;
+      const [winc, hinc] = [width / 28, height / 28];
+
+      const latentSpace = document.getElementById('latent_space');
+
+      function writeToCanvas(data) {
+        ctx.clearRect(0, 0, width, height);
+        for (let r = 0; r < 28; r++) {
+          for (let c = 0; c < 28; c++) {
+            const color = Math.floor(255 * data[r * 28 + c]);
+            ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
+            ctx.fillRect(winc * c, hinc * r, winc, hinc);
+          }
+        }
+      }
+
+      async function predict(session, x, y) {
+        const tensorInputs = [
+          new onnx.Tensor(new Float32Array([x, y]), 'float32', [1, 2]),
+        ];
+        const output = await session.run(tensorInputs);
+        const outputTensor = output.values().next().value;
+        writeToCanvas(outputTensor.data);
+      }
+
+      async function main() {
+        const myOnnxSession = new onnx.InferenceSession();
+        await myOnnxSession.loadModel(window.location.href + '/vae_mnist.onnx');
+        await predict(myOnnxSession, 0, 0);
+
+        latentSpace.onmousemove = e => {
+          const {offsetX, offsetY} = e;
+          const [x, y] = [
+            ((offsetX - 175) / 120) * 3.3,
+            (-(offsetY - 142) / 97) * 4.2,
+          ];
+          predict(myOnnxSession, x, y);
+        };
+      }
+
+      let myOnnxSession = main();
+    </script>
+  </body>
+</html>
