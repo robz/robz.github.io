@@ -40,28 +40,96 @@
       <div>
         <img
           style="margin-right: 80px;"
-          id="latent_space"
+          id="latent_space1"
           src="./latent_space.png"
         />
-        <canvas id="canvas" width="260" height="260"></canvas>
+        <canvas id="canvas1" width="260" height="260"></canvas>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: center;">
+      <section style="width: 700px;">
+        <h2 style="text-align: center;">
+          Learning general characteristics
+        </h2>
+        <p>
+          While exploring the digit clusters in the latent space above, I
+          noticed that they each capture similar characteristics of a particular
+          digit, like rotation and scaling. I was curious if the latent
+          distribution could learn to capture these characteristics in a general
+          way across all digits.
+        </p>
+        <p>
+          I
+          <a
+            href="https://colab.research.google.com/drive/1XrAvC9ADIQtZ-J4Mc_i7unJUMbhi2-tx#scrollTo=dXokkZsZAj_k"
+            >tweaked the autoencoder</a
+          >
+          by appending a 10-dimensional onehot vector representing the digit
+          class to the 2 sampled latents before passing them into the decoder.
+          My theory was that by explicitly providing the label, the VAE would
+          use the latent space to represent characterists that were
+          label-invariant.
+        </p>
+        <p>
+          As you can see below, this VAE's latent space became a mess of color,
+          indicating that it learned to rely on the provided label rather than
+          attempting to digit clusters. In fact, this model was able to achieve
+          a much better loss than the previous one. And it indeed used the
+          latents to represent general characteristics like shearing (x-axis)
+          and boldness (y-axis).
+        </p>
+      </section>
+    </div>
+    <div style="display: flex; justify-content: center; margin-top: 20px;">
+      <img
+        style="margin-right: 80px;"
+        id="latent_space2"
+        src="./latent_space_with_labels.png"
+      />
+    </div>
+    <div
+      style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+      "
+    >
+      <div>
+        <canvas id="canvasLWL0" width="150" height="150"></canvas>
+        <canvas id="canvasLWL1" width="150" height="150"></canvas>
+        <canvas id="canvasLWL2" width="150" height="150"></canvas>
+        <canvas id="canvasLWL3" width="150" height="150"></canvas>
+        <canvas id="canvasLWL4" width="150" height="150"></canvas>
+      </div>
+      <div>
+        <canvas id="canvasLWL5" width="150" height="150"></canvas>
+        <canvas id="canvasLWL6" width="150" height="150"></canvas>
+        <canvas id="canvasLWL7" width="150" height="150"></canvas>
+        <canvas id="canvasLWL8" width="150" height="150"></canvas>
+        <canvas id="canvasLWL9" width="150" height="150"></canvas>
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/onnxjs/dist/onnx.min.js"></script>
     <script>
-      const canvas = document.getElementById('canvas');
-      const ctx = canvas.getContext('2d');
-      const {width, height} = canvas;
-      const [winc, hinc] = [width / 28, height / 28];
+      class DigitCanvas {
+        constructor(id) {
+          const canvas = document.getElementById(id);
+          const ctx = canvas.getContext('2d');
+          const {width, height} = canvas;
+          const [winc, hinc] = [width / 28, height / 28];
+          this.props = {ctx, width, height, winc, hinc};
+        }
 
-      const latentSpace = document.getElementById('latent_space');
-
-      function writeToCanvas(data) {
-        ctx.clearRect(0, 0, width, height);
-        for (let r = 0; r < 28; r++) {
-          for (let c = 0; c < 28; c++) {
-            const color = Math.floor(255 * data[r * 28 + c]);
-            ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
-            ctx.fillRect(winc * c, hinc * r, winc, hinc);
+        write(data) {
+          const {ctx, width, height, winc, hinc} = this.props;
+          ctx.clearRect(0, 0, width, height);
+          for (let r = 0; r < 28; r++) {
+            for (let c = 0; c < 28; c++) {
+              const color = Math.floor(255 * data[r * 28 + c]);
+              ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
+              ctx.fillRect(winc * c, hinc * r, winc, hinc);
+            }
           }
         }
       }
@@ -72,25 +140,90 @@
         ];
         const output = await session.run(tensorInputs);
         const outputTensor = output.values().next().value;
-        writeToCanvas(outputTensor.data);
+        return outputTensor.data;
       }
 
-      async function main() {
-        const myOnnxSession = new onnx.InferenceSession();
-        await myOnnxSession.loadModel(window.location.href + '/vae_mnist.onnx');
-        await predict(myOnnxSession, 0, 0);
+      async function predictLWL(session, x, y) {
+        const latents = [];
+        const emptyClass = Array(10).fill(0);
+        for (let i = 0; i < 10; i++) {
+          const onehotClass = [...emptyClass];
+          onehotClass[i] = 1;
+          latents.push(...[x, y, ...onehotClass]);
+        }
+        const tensorInputs = [
+          new onnx.Tensor(new Float32Array(latents), 'float32', [10, 12]),
+        ];
+        const output = await session.run(tensorInputs);
+        const outputTensor = output.values().next().value;
+        return outputTensor.data;
+      }
 
-        latentSpace.onmousemove = e => {
+      // 2d vae
+      async function initVAE() {
+        const vaeMnist = new onnx.InferenceSession();
+        await vaeMnist.loadModel(window.location.href + '/vae_mnist.onnx');
+
+        const canvas1 = new DigitCanvas('canvas1');
+        const data = await predict(vaeMnist, 0, 0);
+        canvas1.write(data);
+
+        const latentSpace = document.getElementById('latent_space1');
+        latentSpace.onmousemove = async e => {
           const {offsetX, offsetY} = e;
           const [x, y] = [
             ((offsetX - 175) / 120) * 3.3,
             (-(offsetY - 142) / 97) * 4.2,
           ];
-          predict(myOnnxSession, x, y);
+          const data = await predict(vaeMnist, x, y);
+          canvas1.write(data);
         };
       }
 
-      let myOnnxSession = main();
+      // 2d vae using latents with class labels (LWL)
+      async function initVAELWL() {
+        const vaeMnistLWL = new onnx.InferenceSession();
+        await vaeMnistLWL.loadModel(
+          window.location.href + '/vae_mnist_latent_with_labels.onnx',
+        );
+
+        const canvases = Array(10)
+          .fill()
+          .map((_, i) => new DigitCanvas('canvasLWL' + i));
+        const data = await predictLWL(vaeMnistLWL, 0, 0);
+        const s = 28 * 28;
+        for (let i = 0; i < 10; i++) {
+          const img = data.slice(s * i, s * (i + 1));
+          canvases[i].write(img);
+        }
+
+        const latentSpace = document.getElementById('latent_space2');
+        let pending = false;
+        latentSpace.onmousemove = async e => {
+          if (pending) {
+            return;
+          }
+          const {offsetX, offsetY} = e;
+          const [x, y] = [
+            ((offsetX - 175) / 120) * 4.0,
+            (-(offsetY - 142) / 97) * 4.0,
+          ];
+          pending = true;
+          const data = await predictLWL(vaeMnistLWL, x, y);
+          pending = false;
+          for (let i = 0; i < 10; i++) {
+            const img = data.slice(s * i, s * (i + 1));
+            canvases[i].write(img);
+          }
+        };
+      }
+
+      async function main() {
+        await initVAE();
+        await initVAELWL();
+      }
+
+      main();
     </script>
   </body>
 </html>
