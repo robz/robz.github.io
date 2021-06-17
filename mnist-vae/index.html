@@ -147,9 +147,9 @@
           >
           (which required rederiving the closed form KL divergence loss term).
           As shown below, this works suprisingly well: the distributions of each
-          digit were successfully forced into distinct areas of the latent
-          space. Even more surprising is the fact that interpolation between
-          digits is still smooth.
+          digit were successfully forced into distinct, predefined areas of the
+          latent space. Even more surprising is the fact that interpolation
+          between digits is still smooth.
         </p>
       </section>
     </div>
@@ -163,7 +163,27 @@
         <canvas id="canvas3" width="260" height="260"></canvas>
       </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/onnxjs/dist/onnx.min.js"></script>
+    <div style="display: flex; justify-content: center;">
+      <section style="width: 700px; margin-top: 50px;">
+        <h1 style="text-align: center;">Classifying the latent space</h1>
+        <p>In the experiment above, prescribing means for each digit distribution caused the clusters to be very distinct. Making distinct digit clusters is effectively a classification task. I decided to see if this goal could be made more explicit by jointly training the decoder to classify digits.
+        <p>
+        <a href="https://colab.research.google.com/drive/1-jWyDoGDoiepaRSWiBMvl_Y_TP-rE_1N?usp=sharing">In this experiement</a>, the decoder outputs both a sample image as well as a 10-element vector for digit classification. Each iteration of the training loop, the loss is computed from adding the VAE loss terms with a weighted classification loss. I had to play around a bit with the weighting to have the desired affect.
+        </p>
+        <p>Adding a classification loss causes the encoder to learn to distinguish between digits in order to separate their distributions in the latent space, because the decoder must rely entirely on the latent space to classify the digits. The effect are digit clusters with much cleaner boundaries than with vanilla the VAE loss. However, another effect I've observed is that interpolation becomes somewhat less realistic, since there's unused chasms in the latent space between digits.</p>
+      </section>
+    </div>
+    <div style="display: flex; justify-content: center; margin-top: 20px;">
+      <div>
+        <img
+          style="margin-right: 80px;"
+          id="latent_space4"
+          src="./latent_space_classifier.png"
+        />
+        <canvas id="canvas4" width="260" height="260"></canvas>
+      </div>
+    </div>
+    <script src="onnx.min.js"></script>
     <script>
       class DigitCanvas {
         constructor(id) {
@@ -206,6 +226,15 @@
         }
         const tensorInputs = [
           new onnx.Tensor(new Float32Array(latents), 'float32', [10, 12]),
+        ];
+        const output = await session.run(tensorInputs);
+        const outputTensor = output.values().next().value;
+        return outputTensor.data;
+      }
+
+      async function predictClassifier(session, x, y) {
+        const tensorInputs = [
+          new onnx.Tensor(new Float32Array([x, y]), 'float32', [1, 2]),
         ];
         const output = await session.run(tensorInputs);
         const outputTensor = output.values().next().value;
@@ -287,8 +316,26 @@
         latentSpace.onmousemove = async e => {
           const {offsetX, offsetY} = e;
           const [x, y] = [(offsetX - 171) / 7.8, -(offsetY - 116) / 4.2];
-          console.log(offsetX, offsetY, x, y);
           const data = await predict(vaeMnist, x, y);
+          canvas.write(data);
+        };
+      }
+
+      async function initVAEClassifier() {
+        const vaeMnist = new onnx.InferenceSession();
+        await vaeMnist.loadModel(
+          window.location.href + '/vae_mnist_classifier.onnx',
+        );
+
+        const canvas = new DigitCanvas('canvas4');
+        const data = await predict(vaeMnist, 0, 0);
+        canvas.write(data);
+
+        const latentSpace = document.getElementById('latent_space4');
+        latentSpace.onmousemove = async e => {
+          const {offsetX, offsetY} = e;
+          const [x, y] = [(offsetX - 164) / 100 * 4, -(offsetY - 147) / 95 * 4];
+          const data = await predictClassifier(vaeMnist, x, y);
           canvas.write(data);
         };
       }
@@ -297,6 +344,7 @@
         await initVAE();
         await initVAELWL();
         await initVAEControlled();
+        await initVAEClassifier();
       }
 
       main();
