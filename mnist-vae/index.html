@@ -55,7 +55,8 @@
           While exploring the digit clusters in the latent space above, I
           noticed that they each capture similar characteristics of a particular
           digit, like rotation and scaling. I was curious if the latent
-          distribution could learn to capture these characteristics in a general
+          distribution could learn to capture these characteristics in a
+          <i>general</i>
           way across all digits.
         </p>
         <p>
@@ -118,7 +119,7 @@
           VAEs are distinct from regular autoencoders due to the fact that their
           latent representation is a probability distribution, not an arbitrary
           vector. As a result, the VAE loss function has two terms: the
-          reconstruction loss (which is the same as a regular autoencoder,
+          reconstruction loss (which is the same as a regular autoencoder:
           comparing the input to the output) and a term measuring the difference
           between the current and desired latent probability distribution,
           computed with
@@ -128,28 +129,28 @@
           >.
         </p>
         <p>
-          Typically, the desired latent distribution is just a standard gaussian
-          with mean 0 and sigma being a diagonal matrix with all 1s. This causes
-          the latents to be pushed near to the origin, with similar data being
-          clustered together (as seen above) making it convenient to sample, and
-          yielding realistic interpolations between samples. Choosing a gaussian
-          also makes it possible to compute the KL divergence loss term in
-          closed form.
+          Typically, and in the experiments above, the desired latent
+          distribution is just a standard gaussian with means being 0 and
+          variance being a diagonal matrix with all 1s. This causes the latents
+          to be pushed around the origin, with similar data being clustered
+          together (as seen above) making it convenient to sample, and yielding
+          realistic interpolations between samples. Using a gaussian also makes
+          it possible to compute the KL divergence loss term in closed form.
         </p>
         <p>
-          I experimented with manipulating the latent distributions using the
-          digit labels. Instead of computing the KL divergence loss based on a
-          standard gaussian,
+          I experimented with manipulating the latent distribution using the
+          digit <i>labels</i>. Instead of computing the KL divergence loss with
+          the same standard gaussian for each training image,
           <a
             href="https://colab.research.google.com/drive/1HxDSNIHEZ_c1y5imuhyeeTddIwxzm3Y-?usp=sharing"
-            >I made the mean of the target gaussian be different for each
-            digit</a
+            >I made the target means be different for each digit</a
           >
-          (which required rederiving the closed form KL divergence loss term).
-          As shown below, this works suprisingly well: the distributions of each
-          digit were successfully forced into distinct, predefined areas of the
-          latent space. Even more surprising is the fact that interpolation
-          between digits is still smooth.
+          (which required rederiving the closed form KL divergence loss term to
+          have an arbitrary target mean). As shown below, this worked
+          suprisingly well: the distributions of each digit were successfully
+          forced around distinct, predefined points in the latent space. Even
+          more surprising is the fact that interpolation between digits is still
+          fairly smooth.
         </p>
       </section>
     </div>
@@ -166,21 +167,65 @@
     <div style="display: flex; justify-content: center;">
       <section style="width: 700px; margin-top: 50px;">
         <h1 style="text-align: center;">Classifying the latent space</h1>
-        <p>In the experiment above, prescribing means for each digit distribution caused the clusters to be very distinct. Making distinct digit clusters is effectively a classification task. I decided to see if this goal could be made more explicit by jointly training the decoder to classify digits.
         <p>
-        <a href="https://colab.research.google.com/drive/1-jWyDoGDoiepaRSWiBMvl_Y_TP-rE_1N?usp=sharing">In this experiement</a>, the decoder outputs both a sample image as well as a 10-element vector for digit classification. Each iteration of the training loop, the loss is computed from adding the VAE loss terms with a weighted classification loss. I had to play around a bit with the weighting to have the desired affect.
+          In the experiment above, prescribing means for each digit distribution
+          caused distinct digit clusters. Trying to have clearly distinguishable
+          digit clusters is effectively a classification task. To see if this
+          goal could be made more explicit, I experimented with training the
+          decoder to
+          <i>jointly classify digits</i> alongside outputting image samples.
         </p>
-        <p>Adding a classification loss causes the encoder to learn to distinguish between digits in order to separate their distributions in the latent space, because the decoder must rely entirely on the latent space to classify the digits. The effect are digit clusters with much cleaner boundaries than with vanilla the VAE loss. However, another effect I've observed is that interpolation becomes somewhat less realistic, since there's unused chasms in the latent space between digits.</p>
+        <p>
+          <a
+            href="https://colab.research.google.com/drive/1-jWyDoGDoiepaRSWiBMvl_Y_TP-rE_1N?usp=sharing"
+            >In this experiement</a
+          >, the decoder outputs both a sample image as well as a 10-element
+          vector for digit classification. Each iteration of the training loop,
+          the loss is computed by adding the VAE loss terms to a weighted
+          classification loss. I had to tweak the weighting a bit before
+          noticing an affect.
+        </p>
+        <p>
+          The classification loss causes the encoder to separate digits in the
+          latent space because the decoder must rely entirely on latent samples
+          to classify the digits. The result are digit clusters with much
+          cleaner boundaries than the vanilla VAE, while still being distributed
+          around the origin. However, another effect I've observed is that
+          interpolation becomes somewhat less realistic, since there's unused
+          gaps between digit clusters. The size of the gaps depends on the
+          weight of the classification loss term.
+        </p>
       </section>
     </div>
     <div style="display: flex; justify-content: center; margin-top: 20px;">
-      <div>
+      <div style="display: flex;">
         <img
           style="margin-right: 80px;"
           id="latent_space4"
           src="./latent_space_classifier.png"
         />
-        <canvas id="canvas4" width="260" height="260"></canvas>
+        <canvas
+          id="canvas4"
+          width="260"
+          height="260"
+          style="margin-right: 80px;"
+        ></canvas>
+        <div>
+          <h3 style="text-align: center;">Classifier output</h3>
+          <canvas id="canvas5" width="260" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: center;">
+      <section style="width: 700px; margin-top: 50px;">
+        The classifier decision boundaries on the latent space are interesting
+        to compare with the means of the training data. It appears this model
+        had trouble distiguishing 4s and 9s.
+      </section>
+    </div>
+    <div style="display: flex; justify-content: center; margin-top: 20px;">
+      <div>
+        <img src="./latent_space_boundaries.png" />
       </div>
     </div>
     <script src="onnx.min.js"></script>
@@ -203,6 +248,28 @@
               ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
               ctx.fillRect(winc * c, hinc * r, winc, hinc);
             }
+          }
+        }
+      }
+
+      class ClassCanvas {
+        constructor(id) {
+          const canvas = document.getElementById(id);
+          const ctx = canvas.getContext('2d');
+          const {width, height} = canvas;
+          const hinc = height / 10;
+          this.props = {ctx, width, height, hinc};
+        }
+
+        write(data) {
+          const {ctx, width, height, hinc} = this.props;
+          ctx.clearRect(0, 0, width, height);
+          ctx.strokeStyle = 'gray';
+          for (let r = 0; r < 10; r++) {
+            const p = Math.round(data[r] * 1000000) / 1000000;
+            ctx.fillText(r, 0, hinc * (r + 0.5));
+            ctx.fillRect(20, hinc * r, width * p, hinc);
+            ctx.strokeText(p, 20, hinc * (r + 0.5));
           }
         }
       }
@@ -290,7 +357,6 @@
             ((offsetX - 175) / 120) * 4.0,
             (-(offsetY - 130) / 97) * 4.0,
           ];
-          console.log(x, y);
           pending = true;
           const data = await predictLWL(vaeMnistLWL, x, y);
           pending = false;
@@ -328,15 +394,21 @@
         );
 
         const canvas = new DigitCanvas('canvas4');
+        const classCanvas = new ClassCanvas('canvas5');
         const data = await predict(vaeMnist, 0, 0);
         canvas.write(data);
+        classCanvas.write(data.slice(-10));
 
         const latentSpace = document.getElementById('latent_space4');
         latentSpace.onmousemove = async e => {
           const {offsetX, offsetY} = e;
-          const [x, y] = [(offsetX - 164) / 100 * 4, -(offsetY - 147) / 95 * 4];
+          const [x, y] = [
+            ((offsetX - 164) / 100) * 4,
+            (-(offsetY - 147) / 95) * 4,
+          ];
           const data = await predictClassifier(vaeMnist, x, y);
           canvas.write(data);
+          classCanvas.write(data.slice(-10));
         };
       }
 
